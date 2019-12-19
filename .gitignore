@@ -2,3 +2,5 @@
 *.projects
 *.prefs
 *.project
+.metadata
+.History
