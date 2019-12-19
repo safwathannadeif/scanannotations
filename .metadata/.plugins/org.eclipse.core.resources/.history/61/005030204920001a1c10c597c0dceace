@@ -1,0 +1,11 @@
+package com.trytest;
+
+import java.net.URI;
+
+public class PkgNameResourcesContentBase2 {
+	public String pkgName;
+	public URI uri;
+
+	public PkgNameResourcesContentBase2() {
+	}
+}

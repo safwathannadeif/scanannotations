@@ -1,0 +1,55 @@
+package com.scan.annotate;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class OutPutLisOfAnnotClzsAndMethds {
+	List<CapturedAnnotClzAndMethds> lisOfCap  = new ArrayList<CapturedAnnotClzAndMethds>();
+	Class<? extends Annotation> annClz ;
+	Class<? extends Annotation> annMthd ;
+	public void addClz(CapturedAnnotClzAndMethds cpACMs)
+	{
+		lisOfCap.add(cpACMs) ;
+	}
+	public List<CapturedAnnotClzAndMethds> getMthodLis() {
+		return lisOfCap;
+	}
+	public void setMthodLis(List<CapturedAnnotClzAndMethds> lisOfCap) {
+		this.lisOfCap = lisOfCap;
+	}
+	public Class<? extends Annotation> getAnnClz() {
+		return annClz;
+	}
+	public void setAnnClz(Class<? extends Annotation> annClz) {
+		this.annClz = annClz;
+	}
+	public Class<? extends Annotation> getAnnMthd() {
+		return annMthd;
+	}
+	public void setAnnMthd(Class<? extends Annotation> annMthd) {
+		this.annMthd = annMthd;
+	}
+	@Override
+	public String toString() {
+		return "OutPutLisOfAnnotClzsAndMethds [lisOfCap=" + lisOfCap + ", annClz=" + annClz + ", annMthd=" + annMthd
+				+ "]";
+	}
+	public String printResult()
+	{
+		StringBuilder sb = new StringBuilder () ;
+		sb.append("Result for ClassAnnotedWith:").append(annClz.getName()).append("\t").append("MethodAnnotedWith:").append(annMthd.getName()).append("::\n"); 
+		lisOfCap.forEach(cap->{
+			sb.append("\tClass:").append(cap.getAnoClz().getName()).append("\n");
+			cap.getMthodLis().forEach(mthd ->{
+				sb.append("\t\tMethod:").append(mthd.getName()).append("\n");
+				List<Annotation> annList =  Arrays.asList(mthd.getAnnotations()) ;
+				annList.forEach(an -> {
+					sb.append("\t\t\tValueOfAnnotaion:").append(an.toString()) ;	
+				});
+			});
+		}) ;
+		return sb.toString();
+}
+}

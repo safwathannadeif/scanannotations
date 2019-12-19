@@ -1,0 +1,175 @@
+package com.scan.annotate;
+
+import java.lang.annotation.Annotation;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+public class OutPutLisOfAnnotClzsAndMethds {
+	List<CapturedAnnotClzAndMethds> lisOfCap  = new ArrayList<CapturedAnnotClzAndMethds>();
+	List<Class<? extends Annotation>> annInpClzLis = new ArrayList< Class<? extends Annotation> >();
+	List< Class<? extends Annotation> > annInpMthds  = new ArrayList< Class<? extends Annotation> >();
+	public void addClz(CapturedAnnotClzAndMethds cpACMs)
+	{
+		lisOfCap.add(cpACMs) ;
+	}
+	//
+	
+	//
+private volatile Boolean ret1 = false ;
+
+public final Consumer< Class<?> >  filterClzForTheAnnInpClzLisFunc = (clzz) ->
+{
+	if ( clzz == null ) return ;
+	Boolean ret = false ;
+	annInpClzLis.forEach(annInp -> {
+		if ( clzz.isAnnotationPresent(annInp) ) ret1 = true ;
+	});
+	if (ret1 ) {
+		CapturedAnnotClzAndMethds capAnnotClzAndMethds = new CapturedAnnotClzAndMethds() ;
+		capAnnotClzAndMethds.setAnoClz(clzz);
+		addClz(capAnnotClzAndMethds) ;
+		peekTheAnnMthdsforClzOld(capAnnotClzAndMethds) ;
+	}
+} ;
+	
+
+	
+
+	public void  filterClzForTheAnnInpClzLisInp2(Class<?> clzz)
+	{
+		if ( clzz == null ) return ;
+		Boolean ret = false ;
+		int lopNum = 0 ;
+		while ( true )
+		{
+			if ( clzz.isAnnotationPresent(annInpClzLis.get(lopNum))) {
+				ret = true ;
+				break ;
+			}
+		++ lopNum ;	
+		if ( ! (lopNum < annInpClzLis.size())  ) break ;
+		}
+		
+		if (ret ) {
+			CapturedAnnotClzAndMethds capAnnotClzAndMethds = new CapturedAnnotClzAndMethds() ;
+			capAnnotClzAndMethds.setAnoClz(clzz);
+			addClz(capAnnotClzAndMethds) ;
+			peekTheAnnMthdsforClzOld(capAnnotClzAndMethds) ;
+		}
+
+		
+	}
+	
+	
+	public Boolean filterClzForTheAnnInpClzLisInp(CapturedAnnotClzAndMethds capturedAnnotClzAndMethds)
+	{
+		 Boolean ret = false ;
+		int lopNum = 0 ;
+		while ( true )
+		{
+			if ( capturedAnnotClzAndMethds.getAnoClz().isAnnotationPresent(annInpClzLis.get(lopNum))) {
+				ret = true ;
+				break ;
+			}
+		++ lopNum ;	
+		if ( ! (lopNum < annInpClzLis.size())  ) break ;
+		}
+		if (ret )addClz(capturedAnnotClzAndMethds) ;
+		if ( !ret ) capturedAnnotClzAndMethds = null ;
+		System.out.println("return from filterClzForTheAnnInpClzLisInp:[" +  ret + "]") ;
+		return ret ;  //Check if false to null the capturedAnnotClzAndMethds -- since no need  
+		
+	}
+	Predicate<CapturedAnnotClzAndMethds> filterAndPeekTheAnnMthdsforClzi = (capturedAnnotClzAndMethdsi) -> 
+	{ 
+		Arrays.stream(capturedAnnotClzAndMethdsi.getAnoClz().getMethods()).forEach(m -> 
+		{
+			annInpMthds.stream().forEach(clzInMthdAnnotaion -> {
+
+				if ( m.isAnnotationPresent(clzInMthdAnnotaion)) {
+					capturedAnnotClzAndMethdsi.addMthod(m);
+					System.out.println("OK...") ;
+				}
+			}		) ;
+		} ) ;
+		Boolean ret = false ;
+		if (capturedAnnotClzAndMethdsi.getMthodLis().size() >=  1 ) ret = true ;
+		return ret ;
+	} ; 
+	//
+	public Boolean peekTheAnnMthdsforClzOld(CapturedAnnotClzAndMethds capturedAnnotClzAndMethds)
+	{
+		
+		Arrays.stream(capturedAnnotClzAndMethds.getAnoClz().getMethods()).forEach(m -> 
+		{
+			//annInpMthds.stream().forEach(clzInMthdAnnotaion -> {
+				annInpMthds.forEach(clzInMthdAnnotaion -> {
+
+				if ( m.isAnnotationPresent(clzInMthdAnnotaion)) {
+					capturedAnnotClzAndMethds.addMthod(m);
+					System.out.println("OK...") ;
+				}
+			}		) ;
+		} ) ;
+		
+		if (capturedAnnotClzAndMethds.getMthodLis().size() >=  1 ) return true ;
+		return false ;
+
+	}
+	
+	public static UUID dataToUUID(String str ) {
+       
+        return UUID.nameUUIDFromBytes(str.getBytes(StandardCharsets.UTF_8));
+    }
+	
+	public String printResult()
+	{
+		StringBuilder sb = new StringBuilder () ;
+		//sb.append("Result for ClassAnnotedWith:").append(annClz.getName()).append("\t").append("MethodAnnotedWith:").append(annMthds.toString()).append("::\n"); 
+		lisOfCap.forEach(cap->{
+			sb.append("\tClass:").append(cap.getAnoClz().getName()).append("\n");
+			Arrays.stream(cap.getAnoClz().getAnnotations()).forEach(anncls->
+			sb.append(anncls.toString()).append("\n"));
+			sb.append("\tMethod:").append(cap.getAnoClz().getName()).append("\n");                                      
+			cap.getMthodLis().stream().forEach(mthd -> {
+				sb.append("\tMethod:").append(mthd.getName()).append("\n") ;			
+				Arrays.stream(mthd.getAnnotations()).forEach ( anMthd ->{
+					sb.append("\t\t\tValueOfAnnotaion:").append(anMthd.toString()).append("\n");    
+				});
+			}) ;
+
+		}) ;
+
+
+		return sb.toString();
+}
+	public List<Class<? extends Annotation>> getAnnInpClzLis() {
+		return annInpClzLis;
+	}
+	public void setAnnInpClzLis(List<Class<? extends Annotation>> annInpClzLis) {  
+		this.annInpClzLis = annInpClzLis;
+	}
+	public List<Class<? extends Annotation>> getAnnInpMthds() {
+		return annInpMthds;
+	}
+	public void setAnnInpMthds(List<Class<? extends Annotation>> annInpMthds) {
+		this.annInpMthds = annInpMthds;
+	}
+
+
+
+	public List<CapturedAnnotClzAndMethds> getLisOfCap() {
+		return lisOfCap;
+	}
+
+
+
+	public void setLisOfCap(List<CapturedAnnotClzAndMethds> lisOfCap) {
+		this.lisOfCap = lisOfCap;
+	}
+}

@@ -1,0 +1,7 @@
+package com.scan.annotate;
+
+public class CapturedAnnotClzAndMethds {
+	class<?> anoClz ;
+	
+
+}
