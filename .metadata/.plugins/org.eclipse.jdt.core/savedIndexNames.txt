@@ -1,5 +1,0 @@
-INDEX VERSION 1.131+C:\scanannotations\.metadata\.plugins\org.eclipse.jdt.core
-2771533789.index
-1419014417.index
-1431265274.index
-812333720.index
