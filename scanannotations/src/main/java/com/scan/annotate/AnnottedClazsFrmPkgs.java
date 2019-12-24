@@ -50,6 +50,57 @@ public class AnnottedClazsFrmPkgs {
 		void mthdCaptureAnnotaion2(Class<?> clzz, Method mthd , List<Class<? extends Annotation>> annotedClz4MethodLis) ;
 				
 	};
+	//(Class<? extends Annotation> e CapturedAnnotClzAndMethds
+	private  final BiFunction<Path, String, CapturedAnnotClzAndMethds> funMapPathToCaptureClzAndMthds = (pathx,pkgName) -> 
+	{
+		
+		String path = pathx.toString().replace(fileCharSepr, '.');
+		String name = path.substring(path.indexOf(pkgName), path.length() - extension.length());
+		Class<?> clx;
+		// List<Class<? extends Annotation>> clzAnnotedList = new ArrayList<Class<? extends Annotation>>();
+		List<AnnotationDetailsFounded> annFoundLisForClz = new ArrayList<AnnotationDetailsFounded>() ;
+		try {
+			clx = Class.forName(name);
+			//
+			for ( Class<? extends Annotation> annInp : lisOfAnnotClzsAndMethds.getAnnInpClzLis()) 
+			{
+				//if ( clx.isAnnotationPresent(annInp) )  clzAnnotedList.add(annInp);
+				
+				List<? extends Annotation> lisOfTheAry = Arrays.asList(clx.getAnnotationsByType(annInp)); 
+				Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must bot be NULL") ;	//Over Protection--Just in Case of null 
+				if ( lisOfTheAry.size() > 0  ) {
+					
+					//annFoundForClz = new ArrayList<AnnotationDetailsFounded>();
+					AnnotationDetailsFounded annotationDetailsFounded = new AnnotationDetailsFounded() ;
+					lisOfTheAry.forEach(item ->  {
+						annotationDetailsFounded.setAnnInpToFind(annInp);
+						annotationDetailsFounded.setAnnOutFounded(lisOfTheAry);
+						
+					}); 
+					annFoundLisForClz.add(annotationDetailsFounded) ;	
+				}
+			}
+			
+//			lisOfAnnotClzsAndMethds.getAnnInpClzLis()
+//			.forEach(annInp -> {
+//				if ( clx.isAnnotationPresent(annInp) )  clzAnnotedList.add(annInp);   has to be final for clzAnnotedList
+//				}) ;
+			
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+			throw new RuntimeException(e1); 
+		} 	
+	if (annFoundLisForClz.size() == 0) {
+		annFoundLisForClz = null ;
+		return null ;
+	}
+	CapturedAnnotClzAndMethds capAnnotClzAndMethds = new CapturedAnnotClzAndMethds() ;  //private List<AnnotationDetailsFounded> AnnotDetailsFoundedLis
+	capAnnotClzAndMethds.setAnoClz(clx);
+	capAnnotClzAndMethds.setClzAnnotDetailsFoundedLis(annFoundLisForClz); //All clz annoation has been Captured 
+	lisOfAnnotClzsAndMethds.addCap(capAnnotClzAndMethds) ;
+	
+	return capAnnotClzAndMethds ;
+	};
 
 /****** Not Used ************************************************************
 	@FunctionalInterface
@@ -76,28 +127,30 @@ public class AnnottedClazsFrmPkgs {
 
 			    
 	};	
- ****** Not Used **************************/
-	private  final BiFunction<Path, String, Class<?>> funMapPathToAnnoteClass = (pathx,pkgName) -> 
-	{
-		
-		String path = pathx.toString().replace(fileCharSepr, '.');
-		String name = path.substring(path.indexOf(pkgName), path.length() - extension.length());
-		Class<?> clx;
-		try {
-			clx = Class.forName(name);
-			Object[] objArForTest = clx.getDeclaredAnnotations() ;
-			
-			if (objArForTest == null || objArForTest.length == 0  )  // No Clz Annotaion 
-			{
-				return null ;
-			}
-		} catch (ClassNotFoundException e1) {
-			e1.printStackTrace();
-			throw new RuntimeException(e1); 
-		} 	
-	return clx;
-	};
-	
+//
+ 
+ 
+//	private  final BiFunction<Path, String, Class<?>> funMapPathToAnnoteClass = (pathx,pkgName) -> 
+//	{
+//		
+//		String path = pathx.toString().replace(fileCharSepr, '.');
+//		String name = path.substring(path.indexOf(pkgName), path.length() - extension.length());
+//		Class<?> clx;
+//		try {
+//			clx = Class.forName(name);
+//			Object[] objArForTest = clx.getDeclaredAnnotations() ;
+//			
+//			if (objArForTest == null || objArForTest.length == 0  )  // No Clz Annotaion 
+//			{
+//				return null ;
+//			}
+//		} catch (ClassNotFoundException e1) {
+//			e1.printStackTrace();
+//			throw new RuntimeException(e1); 
+//		} 	
+//	return clx;
+//	};
+
 //	private  final BiFunction<Path, String, CapturedAnnotClzAndMethds> funMapPathToCaptureClass = (pathx,pkgName) -> 
 //	{
 //		CapturedAnnotClzAndMethds CapAnnotClzAndMethds = new CapturedAnnotClzAndMethds() ;
@@ -115,7 +168,7 @@ public class AnnottedClazsFrmPkgs {
 //	
 //	return CapAnnotClzAndMethds;
 //	};
-	  
+****** Not Used **************************/		  
 	BiFunction<URL,String,PkgNameResourcesContent> funMapPkgToResourcesContenti = (url1,PkgStrName) -> 
 	{ 
 		PkgNameResourcesContent pkgNameResourcesContenti = new PkgNameResourcesContent() ;
@@ -160,6 +213,7 @@ public class AnnottedClazsFrmPkgs {
 	LoggerRef.getDispLogger().info("End Scaning And Collect Annoted Classes " ) ;
 	LoggerRef.getDispLogger().info("Start Print Result") ;
 	LoggerRef.getDispLogger().info("\n"+ lisOfAnnotClzsAndMethds.printResult()) ;
+	
 	LoggerRef.getDispLogger().info("End Print Result") ;
 	
 	}
@@ -176,12 +230,20 @@ public class AnnottedClazsFrmPkgs {
 		String startWithJarOrFile  = uriToString.substring(0, uriToString.indexOf(':'));
 		switch(startWithJarOrFile) 
 		{ 
+		/******************************************************************************************************************************
+		 * Important Comment regards This line: " FileSystem zipfs = FileSystems.newFileSystem(uri, env); "
+		 *  Avoid some fun from Java regards opening the jar
+		 *  Most Properly we need to track the opened file before opening it??? 
+         * Big Q here ????????????????????????????????????????
+         * Also, the Jar inside jar needs more investigation and Testing 
+		 *******************************************************************************************************************************/
+         
 		case "jar": 
-			FileSystem zipfs = FileSystems.newFileSystem(uri, env);  //avoid some fun from Java regards opening the jar 
+			FileSystem zipfs = FileSystems.newFileSystem(uri, env); //? Avoid some fun from Java regards opening the jar ? //
 			rootPathToWalk = Paths.get(uri);
 			break; 
 		case "file": 
-			rootPathToWalk = Paths.get(uri);
+			rootPathToWalk = Paths.get(uri) ;
 			fileCharSepr = File.separatorChar;
 			break; 
 		default: 
@@ -196,10 +258,16 @@ public class AnnottedClazsFrmPkgs {
 		
 		//.map(e -> funMapPathToCaptureClass.apply(e,pkgName) ) //This one should return clz not filterAndPeekTheAnnMthdsforClzi for optimum usage of objects
 		
-		.map(path -> funMapPathToAnnoteClass.apply(path,pkgName))  //Now the clz is annotated and Created 	
-		.forEach(clz -> lisOfAnnotClzsAndMethds.consumeClzAnnoteLisFunci.accept(clz)) ;
-	
+		//.map(path -> funMapPathToAnnoteClass.apply(path,pkgName))  //Now the clz is annotated and Created 	
+		.map(path -> funMapPathToCaptureClzAndMthds.apply(path,pkgName))  //Now the CapturedAnnotClzAndMethds is ready if not null  capturedAnnClzAndMethds
+		.filter(capturedAnnClzAndMethds ->   capturedAnnClzAndMethds != null )             
+		//.forEach(clz -> lisOfAnnotClzsAndMethds.consumeClzAnnoteLisFunci.accept(clz)) ;
 		
+		.forEach(capturedAnnClzAndMethds ->  
+		{
+		lisOfAnnotClzsAndMethds.peekTheAnnMthdsforClzFunci.accept(capturedAnnClzAndMethds) ;
+	
+	});
 		//.filter(captureAnClzAndMthd  -> lisOfAnnotClzsAndMethds.filterClzForTheAnnInpClzLisInp(captureAnClzAndMthd) ) 
 		//.filter(captureAnClzAndMthd -> lisOfAnnotClzsAndMethds.filterAndPeekTheAnnMthdsforClzi.test(captureAnClzAndMthd) ) ;
 		//captureAnClzAndMthd.getClass().isAnnotationPresent(annotedClass))
