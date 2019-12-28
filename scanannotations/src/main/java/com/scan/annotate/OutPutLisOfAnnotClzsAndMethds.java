@@ -8,13 +8,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
-import com.scan.annotate.CapturedAnnotClzAndMethds.AnnotedListForOneMthd;
+import com.common.SingletonRef;
+import com.scan.annotate.CapturedAnnotClzAndMethds.AnnotedListForEachMthd;
 
 public class OutPutLisOfAnnotClzsAndMethds {
 	List<CapturedAnnotClzAndMethds> lisOfCap  = new ArrayList<CapturedAnnotClzAndMethds>();
 	List<Class<? extends Annotation>> annInpClzLis = new ArrayList< Class<? extends Annotation> >();
 	List< Class<? extends Annotation> > annInpMthdsLis  = new ArrayList< Class<? extends Annotation> >();
 	List<AnnotationDetailsFounded> annFoundForClz = null ;
+	public OutPutLisOfAnnotClzsAndMethds()
+	{
+		SingletonRef.ONLYONEINS.setOutPutLisOfAnnotClzsAndMethds(this);
+	
+	}
 	public int addCap(CapturedAnnotClzAndMethds cpACMs)
 	{
 		lisOfCap.add(cpACMs) ;
@@ -38,30 +44,36 @@ public class OutPutLisOfAnnotClzsAndMethds {
 public final Consumer<CapturedAnnotClzAndMethds>  peekTheAnnMthdsforClzFunci=  (capturedAnnotClzAndMethds) ->
 {
 	if ( null == annInpMthdsLis) return ;
-	List<AnnotationDetailsFounded> annFoundLisForMthd = new ArrayList<AnnotationDetailsFounded>() ;
+	//List<AnnotationDetailsFounded> annFoundLisForMthd = new ArrayList<AnnotationDetailsFounded>() ;
 	Arrays.stream(capturedAnnotClzAndMethds.getAnoClz().getMethods()).forEach( methodi -> 
 	{
-		AnnotedListForOneMthd annotedListForOneMthdi = capturedAnnotClzAndMethds.makeNewAnnotedListForOneMthd(methodi) ;
+		AnnotedListForEachMthd annotedListForOneMthdi = capturedAnnotClzAndMethds.makeNewAnnotedListForOneMthd(methodi) ;
+		List<AnnotationDetailsFounded> annFoundLisForMthd = new ArrayList<AnnotationDetailsFounded>() ;
 		for ( Class<? extends Annotation> methodInpAnnot  : annInpMthdsLis) 
 		{
+			//Annotation[] anAry = methodi.getAnnotationsByType(methodInpAnnot) ;
+			//List<Class<? extends Annotation>> lisOfTheAry = Arrays.asList(anAry) ;
 			////
-			List<? extends Annotation> lisOfTheAry = Arrays.asList(methodi.getAnnotationsByType(methodInpAnnot)); 
+			 //lisOfTheAry = new ArrayList< Class<? extends Annotation> >();
+			 List< ? extends Annotation> lisOfTheAry =  Arrays.asList(methodi.getAnnotationsByType(methodInpAnnot)); 
 			Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must bot be NULL") ;	//Over Protection--Just in Case of null 
 			if ( lisOfTheAry.size() > 0  ) {
 				AnnotationDetailsFounded annotationDetailsFounded = new AnnotationDetailsFounded() ;
-				lisOfTheAry.forEach(annoteItem ->  {
-					annotationDetailsFounded.setAnnInpToFind(methodInpAnnot);
-					annotationDetailsFounded.setAnnOutFounded(lisOfTheAry);
-					
-				}); 
-				annFoundLisForMthd.add(annotationDetailsFounded);
-				annotedListForOneMthdi.setMethodAnnotDetailsFoundedLis(annFoundLisForMthd);
+				annotationDetailsFounded.setAnnInpToFind(methodInpAnnot);
+				annotationDetailsFounded.setAnnOutFounded(lisOfTheAry);
+				
+				annFoundLisForMthd.add(annotationDetailsFounded); 
+				annotedListForOneMthdi.setMethodAnnotDetailsFoundedLis(annFoundLisForMthd); // ??
+			}
+			lisOfTheAry = null ;	 
+				
 				
 			}
-		}
+		
 	
 		if ( annotedListForOneMthdi.getMethodAnnotDetailsFoundedLis() == null ) 
 		{
+			annFoundLisForMthd = null ;
 			annotedListForOneMthdi = null ;	
 		}
 		else
@@ -100,43 +112,8 @@ public final Consumer<CapturedAnnotClzAndMethds>  peekTheAnnMthdsforClzFunci=  (
         return UUID.nameUUIDFromBytes(str.getBytes(StandardCharsets.UTF_8));
     }
 	
-	public String printResult()
-	{
-		StringBuilder sb = new StringBuilder () ; 
-		lisOfCap.forEach(cap-> {
-			sb.append("Class:").append(cap.getAnoClz().getName()).append("\n");
-			sb.append("\t\tAnnotaionFoundInClass::\n") ;
-			cap.getClzAnnotDetailsFoundedLis().forEach(foundInLis-> {
-				sb.append("\t\t\t" +foundInLis.getAnnInpToFind().toString());
-				foundInLis.getAnnOutFounded().forEach(annOutFounded ->{
-					sb.append("\n\t\t\t\t" +annOutFounded.toString()) ; 
-				}) ;
-				sb.append("\n") ;
-			}); //
-			sb.append( "---------------------------------------------------------------------------\n") ;
-			sb.append("\t\tMethods::\n") ;
-			cap.getMthodsAnnotedListForClz().forEach( annotListForOneMthd->
-			{
-				sb.append("\t\tMethod:" + annotListForOneMthd.getTypeClz().getName()).append("\n"); 
-				sb.append("\t\t\tAnnotaionsForMethod::").append("\n") ; 
-				annotListForOneMthd.getMethodAnnotDetailsFoundedLis()             
-				.forEach( anFoundMthdLis -> {
-					sb.append("\t\t\t" +anFoundMthdLis.getAnnInpToFind().toString());
-					//sb.append("\t\t\\t" + anMthd.getAnnotations().toString() ) ; //Array of Array of Annotations
-					////////sb.append("\t\t\t").append(anFoundMthdLis.toString()).append("\n") ;
-					anFoundMthdLis.getAnnOutFounded().forEach(annOutFounded ->{
-						sb.append("\n\t\t\t\t" +annOutFounded.toString()) ; //+"\n");	
-					}) ;	
-					sb.append("\n") ;
-				}) ;
+	
 
-
-			}) ;
-			sb.append( "-----------------------------------------------------------------------------------------------------------------------------------------------------\n") ;
-
-		});
-		return sb.toString();
-}
 	public List<Class<? extends Annotation>> getAnnInpClzLis() {
 		return annInpClzLis;
 	}

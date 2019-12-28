@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.common.SingletonRef;
 
-import com.scan.annotate.logging.LoggerRef;
 
 public class PkgNameResourcesContent {
 private PkgNameResourcesContentBase2 pkgNameResourcesContentBase2 = new PkgNameResourcesContentBase2();
@@ -128,7 +128,7 @@ public void priFilterTracking()
 	    	sb.append("\n\t\t["+item.getPkgName() +"] [" +  item.getUri() + "]") ;
 	    });
 	});
-	LoggerRef.getDispLogger().info(sb.toString()) ;
+	SingletonRef.ONLYONEINS.getDispLogger().info(sb.toString()) ;
 
 }
 public PkgNameResourcesContentBase2 getPkgNameResourcesContentBase2() {

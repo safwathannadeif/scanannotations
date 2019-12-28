@@ -1,10 +1,11 @@
 package com.scan.annotate;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-//import com.scan.annotate.OutPutLisOfAnnotClzsAndMethds.AnnotaionTypeLis;
+import com.scan.annotate.query.ClzAndAssociatedMethdsQR;
 
 
 public class CapturedAnnotClzAndMethds {
@@ -12,27 +13,33 @@ public class CapturedAnnotClzAndMethds {
 	private Class<?> anoClz ;
 	
 	private List<AnnotationDetailsFounded> clzAnnotDetailsFoundedLis = null ; 
-	private List<AnnotedListForOneMthd> mthodsAnnotedListForClz = new ArrayList<AnnotedListForOneMthd>();
+	private List<AnnotedListForEachMthd> mthodsAnnotedListForClz = new ArrayList<AnnotedListForEachMthd>();
 		
 	//Class for Antedated Methods
 	//public class AnnotedListForOneMthd implements AnnotaionTypeLis<Method> {
-	public class AnnotedListForOneMthd  {
+	public class AnnotedListForEachMthd  {
 	//private List<Class<? extends Annotation>> annotedListForMthd = new ArrayList<Class<? extends Annotation>>(); 
-	private Method method; 								//// Might be Class or Method now Only for Method .. OK
+	private Method method; 								
 	private List<AnnotationDetailsFounded> methodAnnotDetailsFoundedLis = null ;
-			public AnnotedListForOneMthd( )  {
+			public AnnotedListForEachMthd( )  {
 		
 			}
-			public AnnotedListForOneMthd(Method m )  {
-				setTypeClz(m);
+			@Override
+			public String toString() {
+				return "AnnotedListForOneMthd [method=" + method + ", methodAnnotDetailsFoundedLis="
+						+ methodAnnotDetailsFoundedLis + "]";
 			}
-			public Method getTypeClz() {
+			public AnnotedListForEachMthd(Method m )  {
+				setMthd(m);
+			}
+			public Method getMthd() {
 				return method;
 			}
 			//@Override
-			public void setTypeClz(Method t) {
-				this.method = t;
+			public void setMthd(Method mthd) {
+				this.method = mthd;
 			}
+			
 //			public void addAnnotedItemForMthod (Class<? extends Annotation> anoclzForMthod )
 //			{
 //				annotedListForMthd.add(anoclzForMthod) ;
@@ -46,21 +53,10 @@ public class CapturedAnnotClzAndMethds {
 			}
 			
 	}
-	public AnnotedListForOneMthd makeNewAnnotedListForOneMthd(Method m)
+	public AnnotedListForEachMthd makeNewAnnotedListForOneMthd(Method m)
 	{
-		return new AnnotedListForOneMthd(m) ;
+		return new AnnotedListForEachMthd(m) ;
 	}
-	
-	//
-	/* Silly Mistake 
-	 * private AnnotedListForMthd annotedListForMthdi = null ;
-	 * 
-	 * public void makeNewAnnotedListForMthd(Method m) { annotedListForMthdi = new
-	 * AnnotedListForMthd(m) ; System.out.println
-	 * ("YYYYYYY  annotedListForMthdi Made from makeNewAnnotedListForMthd" +
-	 * annotedListForMthdi.toString()) ; }
-	 */
-	
 	public Path getPath() {
 		return path;
 	}
@@ -73,16 +69,73 @@ public class CapturedAnnotClzAndMethds {
 	public void setAnoClz(Class<?> anoClz) {
 		this.anoClz = anoClz;
 	}
-//	public List<Class<? extends Annotation>> getClazAnnotedList() {
-//		return annotedListForClz;
-//	}
-//	public void setClazAnnotedList(List<Class<? extends Annotation>> clazAnnotedList) {
-//		this.annotedListForClz = clazAnnotedList;
-//	}
-//	public void  addAnnotedToListForClass(Class<? extends Annotation> e) {
-//		annotedListForClz.add(e);
-//	}
-	public void addAnnotedMethodToListForClzMethods(AnnotedListForOneMthd am) 
+	
+	public ClzAndAssociatedMethdsQR  queryFoundAnnotedClz ( Class<? extends Annotation> inpQAnnotationclz,Class<? extends Annotation> inpQAnnotationMthodclz)
+	{
+		ClzAndAssociatedMethdsQR clzAndAssociatedMethdsQR = new ClzAndAssociatedMethdsQR() ;
+		clzAnnotDetailsFoundedLis.forEach(adfLis ->{ 						// adfLis == AnnotationDetailsFounded adfLis Class 
+			
+			if ( adfLis.getAnnInpToFind().getCanonicalName().trim().equals(inpQAnnotationclz.getCanonicalName().trim()) )
+			{
+				
+				clzAndAssociatedMethdsQR.setClz(getAnoClz());
+				
+			}
+		}) ; //all Annotated items for one class 
+		if ( null == clzAndAssociatedMethdsQR.getClz() ) return clzAndAssociatedMethdsQR ;
+		if (null == inpQAnnotationMthodclz) return clzAndAssociatedMethdsQR ; //Where annotation required  only for classes 
+		
+		getMthodsAnnotedListForClz().forEach( alfm -> {     					//alfm  == AnnotedListForEachMthd
+			
+			alfm.getMethodAnnotDetailsFoundedLis().forEach(mdflis ->{   		// mdflis  == MethodAnnotDetailsFoundedLis  method
+				
+				if (mdflis.getAnnInpToFind().getCanonicalName().trim().equals(inpQAnnotationMthodclz.getCanonicalName().trim()))	
+				{
+					clzAndAssociatedMethdsQR.getMethodLis().add(alfm.getMthd()) ;	
+				}
+				
+			}) ;	
+			
+
+				
+	}) ;
+	return	clzAndAssociatedMethdsQR ;
+	
+}	
+public Boolean isAnnotedClz ( Class<? extends Annotation> annotationclz)
+{
+	Boolean bRet  = false ;
+	Annotation[] anAry = anoClz.getAnnotationsByType(annotationclz) ;
+	if ( anAry.length > 0 ) bRet = true ; 
+	return bRet ;
+	
+}
+//
+volatile Boolean  bRet  = false ;
+public Boolean isAnnotedMthdClz ( Class<? extends Annotation> inpQAnnotationMthodclz) 
+{
+	 //mthodsAnnotedListForClz
+	mthodsAnnotedListForClz.stream().forEach(item1 ->  {						//itemAnnotedListForOneMthd[item1]
+		item1.getMethodAnnotDetailsFoundedLis().forEach(item2 -> {				//List<AnnotationDetailsFounded> item AnnotationDetailsFounded[item2]
+		if (item2.getAnnInpToFind().getClass().getName().trim().equalsIgnoreCase(inpQAnnotationMthodclz.getClass().getName().trim()))	
+				{
+						if (!bRet) {
+							bRet=true ;
+							
+						}
+				}
+		});   
+		
+	}
+	);
+	
+	
+return 	bRet ;	
+}
+//
+
+
+	public void addAnnotedMethodToListForClzMethods(AnnotedListForEachMthd am) 
 	{
 		mthodsAnnotedListForClz.add(am) ;
 	}
@@ -101,14 +154,10 @@ public class CapturedAnnotClzAndMethds {
 				+ ", mthodsAnnotedListForClz=" + mthodsAnnotedListForClz.toString() + "]";
 	}
 
-	public List<AnnotedListForOneMthd> getMthodsAnnotedListForClz() {
+	public List<AnnotedListForEachMthd> getMthodsAnnotedListForClz() {
 		return mthodsAnnotedListForClz;
 	}
 
-//	public void setMthodsAnnotedListForClz(List<AnnotedListForOneMthd> mthodsAnnotedListForClz) {
-//		this.mthodsAnnotedListForClz = mthodsAnnotedListForClz;
-//	}
-	
-	
+
 
 }

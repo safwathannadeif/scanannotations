@@ -6,7 +6,7 @@ import java.util.List;
 //Annotation Details Founded    One to Many
 public class AnnotationDetailsFounded {
 	Class<? extends Annotation> annInpToFind = null ; // one input for class or method
-	List<? extends Annotation> annOutFounded = null ; // 1-many if annotation found or 0 length if not found
+	List<? extends Annotation> annOutFounded = null ; //new ArrayList<? extends Annotation>() ; //null ; // 1-many if annotation found or 0 length if not found
 	
 	public Class<? extends Annotation> getAnnInpToFind() {
 		return annInpToFind;
@@ -17,13 +17,13 @@ public class AnnotationDetailsFounded {
 	public List<? extends Annotation> getAnnOutFounded() {
 		return annOutFounded;
 	}
-	public void setAnnOutFounded(List<? extends Annotation> annOutFounded) {
-		this.annOutFounded = annOutFounded;
+	public void setAnnOutFounded(List<? extends Annotation> annOutFoundedi) {
+		
+		// Clone a list Yes Clone it     
+		//Clone annOutFounded  = annOutFoundedi.stream().collect(Collectors.toList()); 
+		annOutFounded=annOutFoundedi ;
+		 
 	}
-	//toString()
-	//lisOfTheAry.forEach(annotaionItem -> {
-	//	System.out.println("\t\t" + annotaionItem.toString()); //Gives the annotation type and value as one String--Good
-	//});
 	
 }
 //  isAnnotationPresent doesn't return the repeatable annotations while getAnnotationsByType does

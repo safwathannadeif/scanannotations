@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
+import com.common.SingletonRef;
 import com.scan.annotate.PkgNameResourcesContent.PkgNameResourcesContentBase2;
-import com.scan.annotate.logging.LoggerRef;
+
 
 public class AnnottedClazsFrmPkgs {
 	private final OutPutLisOfAnnotClzsAndMethds lisOfAnnotClzsAndMethds = new OutPutLisOfAnnotClzsAndMethds() ;
@@ -67,7 +67,7 @@ public class AnnottedClazsFrmPkgs {
 				//if ( clx.isAnnotationPresent(annInp) )  clzAnnotedList.add(annInp);
 				
 				List<? extends Annotation> lisOfTheAry = Arrays.asList(clx.getAnnotationsByType(annInp)); 
-				Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must bot be NULL") ;	//Over Protection--Just in Case of null 
+				Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must ot be NULL") ;	//Over Protection--Just in Case of null 
 				if ( lisOfTheAry.size() > 0  ) {
 					
 					//annFoundForClz = new ArrayList<AnnotationDetailsFounded>();
@@ -102,73 +102,6 @@ public class AnnottedClazsFrmPkgs {
 	return capAnnotClzAndMethds ;
 	};
 
-/****** Not Used ************************************************************
-	@FunctionalInterface
-	interface CaptureAnnotionsMethodFunc {
-		void mthdCaptureAnnotaion(CapturedAnnotClzAndMethds captureAnMthdFunc , List<Class<? extends Annotation>>  annot4MethodLis ) ; //throws Exception ;
-	};
-	
-	private  final CaptureAnnotionsMethodFunc capAnnMthodFunc = (captureAnMthdFunc,   annot4MethodLis ) -> 
-	{
-		lisOfAnnotClzsAndMethds.addClz(captureAnMthdFunc);
-		
-		Arrays.stream(captureAnMthdFunc.getAnoClz().getMethods()) 
-//		      .filter(m -> m.isAnnotationPresent(annot4Method))
-		      .peek( mf -> captureAnMthdFunc.addMthod(mf) )	 
-		      .forEach(m -> { LoggerRef.getDispLogger().info(m.toString());
-		    	            }) ;
-		
-//		
-//			        .filter(m -> m.isAnnotationPresent(annot4Method))
-//			        //.toArray(Method[]::new);
-//			        .peek( mf -> annotClzAndMethds.addMthod(mf) )	
-//			        .map (m -> "Class:Method AnnootedValue :"+ clz.getName()+"::" +m.getName() + "Value:"+  m.getAnnotation(annot4Method).toString())
-//			        .forEach(LoggerRef.getDispLogger()::info) ;
-
-			    
-	};	
-//
- 
- 
-//	private  final BiFunction<Path, String, Class<?>> funMapPathToAnnoteClass = (pathx,pkgName) -> 
-//	{
-//		
-//		String path = pathx.toString().replace(fileCharSepr, '.');
-//		String name = path.substring(path.indexOf(pkgName), path.length() - extension.length());
-//		Class<?> clx;
-//		try {
-//			clx = Class.forName(name);
-//			Object[] objArForTest = clx.getDeclaredAnnotations() ;
-//			
-//			if (objArForTest == null || objArForTest.length == 0  )  // No Clz Annotaion 
-//			{
-//				return null ;
-//			}
-//		} catch (ClassNotFoundException e1) {
-//			e1.printStackTrace();
-//			throw new RuntimeException(e1); 
-//		} 	
-//	return clx;
-//	};
-
-//	private  final BiFunction<Path, String, CapturedAnnotClzAndMethds> funMapPathToCaptureClass = (pathx,pkgName) -> 
-//	{
-//		CapturedAnnotClzAndMethds CapAnnotClzAndMethds = new CapturedAnnotClzAndMethds() ;
-//		String path = pathx.toString().replace(fileCharSepr, '.');
-//		CapAnnotClzAndMethds.setPath(pathx) ;
-//		String name = path.substring(path.indexOf(pkgName), path.length() - extension.length());
-//		Class<?> clx;
-//		try {
-//			clx = Class.forName(name);
-//		} catch (ClassNotFoundException e1) {
-//			e1.printStackTrace();
-//			throw new RuntimeException(e1); 
-//		} 
-//		CapAnnotClzAndMethds.setAnoClz(clx) ;
-//	
-//	return CapAnnotClzAndMethds;
-//	};
-****** Not Used **************************/		  
 	BiFunction<URL,String,PkgNameResourcesContent> funMapPkgToResourcesContenti = (url1,PkgStrName) -> 
 	{ 
 		PkgNameResourcesContent pkgNameResourcesContenti = new PkgNameResourcesContent() ;
@@ -188,20 +121,28 @@ public class AnnottedClazsFrmPkgs {
 	} ; 
 	
 	//
+	/**
+	 * @param inputPKGs
+	 * @param annotedClassLis
+	 * @param annotedClz4MethodLis
+	 */
 	public void doScanAndCapture(List<String> inputPKGs, List<Class<? extends Annotation>>  annotedClassLis, List<Class<? extends Annotation>> annotedClz4MethodLis )
 	{
+		//we need to add not null Annotations for classes
+		//
+/* TODO Check for not null annotation for Classes Pending */
 	lisOfAnnotClzsAndMethds.setAnnInpClzLis(annotedClassLis) ;		
 	lisOfAnnotClzsAndMethds.setAnnInpMthds(annotedClz4MethodLis);
 	List<PkgNameResourcesContent> sortedLisByStrFile =sortPkgs(inputPKGs) ;
 	List<PkgNameResourcesContent> normalizedPkgAndURIsLis = 	new ArrayList<PkgNameResourcesContent>();
 	normalizedPkgAndURIsLis = removeDuplication(sortedLisByStrFile) ;
-	LoggerRef.getDispLogger().info("\t\tStrat priFilterTracking") ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("\t\tStrat priFilterTracking") ;
 	if (normalizedPkgAndURIsLis.size() > 1)normalizedPkgAndURIsLis.get(0).priFilterTracking();
-	LoggerRef.getDispLogger().info("\t\tEnd priFilterTracking") ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("\t\tEnd priFilterTracking") ;
 	
-	LoggerRef.getDispLogger().info("Start Scaning And Collect Annoted Classes " ) ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("Start Scaning And Collect Annoted Classes " ) ;
 	normalizedPkgAndURIsLis.forEach(pkgNameResourcesContent -> {
-		LoggerRef.getDispLogger().info("Scan PKG/URI =["+pkgNameResourcesContent.getPkgName() +"] [" +  pkgNameResourcesContent.getUri() + "]") ;
+		SingletonRef.ONLYONEINS.getDispLogger().info("Scan PKG/URI =["+pkgNameResourcesContent.getPkgName() +"] [" +  pkgNameResourcesContent.getUri() + "]") ;
 		try {
 			collectAnnotedClassesPerPKgURI(pkgNameResourcesContent) ; 
 		} catch (FileSystemNotFoundException | IOException | URISyntaxException | IllegalAccessException e) {
@@ -210,11 +151,11 @@ public class AnnottedClazsFrmPkgs {
 		} 		
 	}
 			);
-	LoggerRef.getDispLogger().info("End Scaning And Collect Annoted Classes " ) ;
-	LoggerRef.getDispLogger().info("Start Print Result") ;
-	LoggerRef.getDispLogger().info("\n"+ lisOfAnnotClzsAndMethds.printResult()) ;
-	
-	LoggerRef.getDispLogger().info("End Print Result") ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("End Scaning And Collect Annoted Classes " ) ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("Start Print Result") ;
+	//SingletonRef.ONLYONEINS.getDispLogger().info("\n"+ lisOfAnnotClzsAndMethds.printResult(lisOfAnnotClzsAndMethds.getLisOfCap())) ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("\n"+ SingletonRef.ONLYONEINS.printResult(lisOfAnnotClzsAndMethds.getLisOfCap())) ;
+	SingletonRef.ONLYONEINS.getDispLogger().info("End Print Result") ;
 	
 	}
 	//
@@ -224,6 +165,9 @@ public class AnnottedClazsFrmPkgs {
 		env.put("create", "true");  //Set the env to be create for reading the jar entries; otherwise null and fileSystem not Found exception!!!!!
 		fileCharSepr = '/';
 		URI uri = pkgNameRCt.getUri() ;
+		//
+		/* TODO Check for uri open or not  Pending */	
+		//
 		String pkgName = pkgNameRCt.getPkgName().trim() ;
 		Path rootPathToWalk= null ;
 		String uriToString = uri.toString().trim();
@@ -239,6 +183,9 @@ public class AnnottedClazsFrmPkgs {
 		 *******************************************************************************************************************************/
          
 		case "jar": 
+			//
+			// we need to check the open files for Mutiples jars?? Pending
+			//
 			FileSystem zipfs = FileSystems.newFileSystem(uri, env); //? Avoid some fun from Java regards opening the jar ? //
 			rootPathToWalk = Paths.get(uri);
 			break; 
@@ -247,7 +194,7 @@ public class AnnottedClazsFrmPkgs {
 			fileCharSepr = File.separatorChar;
 			break; 
 		default: 
-			LoggerRef.getDispLogger().severe("uriToString Start with unkwon  match[" + startWithJarOrFile + "]");
+			SingletonRef.ONLYONEINS.getDispLogger().severe("uriToString Start with unkwon  match[" + startWithJarOrFile + "]");
 			throw new RuntimeException("uriToString Start with unkwon  match[" + startWithJarOrFile + "]");
 		} 
 		@SuppressWarnings("resource")
@@ -255,27 +202,17 @@ public class AnnottedClazsFrmPkgs {
 		allPaths
 		
 		.filter(isJavaClassFile)
-		
-		//.map(e -> funMapPathToCaptureClass.apply(e,pkgName) ) //This one should return clz not filterAndPeekTheAnnMthdsforClzi for optimum usage of objects
-		
-		//.map(path -> funMapPathToAnnoteClass.apply(path,pkgName))  //Now the clz is annotated and Created 	
+		 	
 		.map(path -> funMapPathToCaptureClzAndMthds.apply(path,pkgName))  //Now the CapturedAnnotClzAndMethds is ready if not null  capturedAnnClzAndMethds
 		.filter(capturedAnnClzAndMethds ->   capturedAnnClzAndMethds != null )             
-		//.forEach(clz -> lisOfAnnotClzsAndMethds.consumeClzAnnoteLisFunci.accept(clz)) ;
+		
 		
 		.forEach(capturedAnnClzAndMethds ->  
 		{
 		lisOfAnnotClzsAndMethds.peekTheAnnMthdsforClzFunci.accept(capturedAnnClzAndMethds) ;
 	
 	});
-		//.filter(captureAnClzAndMthd  -> lisOfAnnotClzsAndMethds.filterClzForTheAnnInpClzLisInp(captureAnClzAndMthd) ) 
-		//.filter(captureAnClzAndMthd -> lisOfAnnotClzsAndMethds.filterAndPeekTheAnnMthdsforClzi.test(captureAnClzAndMthd) ) ;
-		//captureAnClzAndMthd.getClass().isAnnotationPresent(annotedClass))
-								//.forEach(captureAnClzAndMthd -> { 
-								//lisOfAnnotClzsAndMethds.filterAndPeekTheAnnMthdsforClzi.test(captureAnClzAndMthd) ; //Remember always to give at the terminate function like collect or forEach
-				//capAnnMthodFunc.mthdCaptureAnnotaion(captureAnClzAndMthd)  ;
-				//Arrays.stream(clz.getMethods()).forEach(mthd -> )
-								//}) ;
+		
 	}
 	public List<PkgNameResourcesContent> removeDuplication(List<PkgNameResourcesContent> sortedLis)
 	{
