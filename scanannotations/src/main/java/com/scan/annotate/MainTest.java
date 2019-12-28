@@ -13,15 +13,14 @@ import com.annotations.samples.wrkspace.RepeatAnnoationsMethods.OrderAnnotion;
 import com.common.SingletonRef;
 import com.scan.annotate.query.ClzAndAssociatedMethdsQR;
 
+/*
+# scan annotations without any third party library
+- Captured Annotations for Classes and Jars 
+- Query the Scanned results to return specific annotations for Classes and Methods within the Classes
+- See MainTest to  how to Scan and Query the the Annotations
+*/ 
 
-//import com.annotaion.RepeatAnnoations.OrderAnnotion;
-
-public class MainTest {
-	//@FunctionalInterface
-			//interface AnnoteLisFunction<T_M_OR_C, LisOfInpAnno, LisOfAnnotaionTypeLis> {
-//				LisOfAnnotaionTypeLis applyIt(T_M_OR_C tmc, LisOfInpAnno la);
-			//}
-			
+public class MainTest {		
 	
 	@FunctionalInterface
 	interface Query4Annotaion<P1,P2,P3,R> {
