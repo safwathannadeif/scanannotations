@@ -15,15 +15,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate ;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,20 +40,47 @@ import com.scan.annotate.PkgNameResourcesContent.PkgNameResourcesContentBase2;
 
 public class AnnottedClazsFrmPkgs {
 	private final OutPutLisOfAnnotClzsAndMethds lisOfAnnotClzsAndMethds = new OutPutLisOfAnnotClzsAndMethds() ;
-	private static Map<String, String> env = new HashMap<>(); ////see why note in env.put before Calling the collectAnnotedClassesPerPKgURI 
+	private static Map<String, String> env = new HashMap<>(); ////see why note in env.put before Calling the collectAnnotedClassesPerPKgURI
+	
 	private final Map<PkgNameResourcesContentBase2, List<PkgNameResourcesContent>> filterTracking 
 	             = new HashMap<PkgNameResourcesContentBase2,List<PkgNameResourcesContent>>() ;
 	private volatile Character fileCharSepr = '/';
 	private final String extension = ".class";
+	Set<String> synchtrackOpendJars = null ; 
+	
 	private  final  Predicate<Path> isJavaClassFile = (pf) -> {
 		Boolean bRet = Files.isRegularFile(pf) && pf.getFileName().toString().trim().endsWith(extension);
 		return bRet ;
 	};
-	@FunctionalInterface
-	interface CaptureAnnotionsMethodFunc2 {
-		void mthdCaptureAnnotaion2(Class<?> clzz, Method mthd , List<Class<? extends Annotation>> annotedClz4MethodLis) ;
-				
-	};
+	public AnnottedClazsFrmPkgs()
+	{
+		Set<String>	trackOpendJars	= new HashSet<>();
+		 synchtrackOpendJars = Collections.synchronizedSet(trackOpendJars);
+	}
+//	@FunctionalInterface
+//	interface CaptureAnnotionsMethodFunc2 {
+//		void mthdCaptureAnnotaion2(Class<?> clzz, Method mthd , List<Class<? extends Annotation>> annotedClz4MethodLis) ;
+//				
+//	};
+	// Creating Consumer to track-open  Jars  
+		Consumer<URI> makeJarReady = (uri) -> {	
+	    	String s= uri.toString().trim() ;
+			String fileIdntfr = s.substring(0, s.indexOf("jar!") +4).trim() ;
+			if (synchtrackOpendJars.contains(fileIdntfr.trim())) {
+			    return ;
+			}
+			
+				try {
+					FileSystem zipfs = FileSystems.newFileSystem(uri, env); //Create new to avoid jar-fileNotFound  see more on Comment and fix on 4thJan2020!!!
+					synchtrackOpendJars.add(fileIdntfr) ;
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e); 
+				} //? Avoid some fun from Java regards opening the jar ? //
+			
+			
+			
+	    } ;
 	//(Class<? extends Annotation> e CapturedAnnotClzAndMethds
 	private  final BiFunction<Path, String, CapturedAnnotClzAndMethds> funMapPathToCaptureClzAndMthds = (pathx,pkgName) -> 
 	{
@@ -67,7 +98,7 @@ public class AnnottedClazsFrmPkgs {
 				//if ( clx.isAnnotationPresent(annInp) )  clzAnnotedList.add(annInp);
 				
 				List<? extends Annotation> lisOfTheAry = Arrays.asList(clx.getAnnotationsByType(annInp)); 
-				Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must ot be NULL") ;	//Over Protection--Just in Case of null 
+				Objects.requireNonNull(lisOfTheAry, "Return Array from getAnnotationsByType must Not be NULL") ;	//Over Protection--Just in Case of null 
 				if ( lisOfTheAry.size() > 0  ) {
 					
 					//annFoundForClz = new ArrayList<AnnotationDetailsFounded>();
@@ -131,6 +162,7 @@ public class AnnottedClazsFrmPkgs {
 		//we need to add not null Annotations for classes
 		//
 /* TODO Check for not null annotation for Classes Pending */
+		
 	lisOfAnnotClzsAndMethds.setAnnInpClzLis(annotedClassLis) ;		
 	lisOfAnnotClzsAndMethds.setAnnInpMthds(annotedClz4MethodLis);
 	List<PkgNameResourcesContent> sortedLisByStrFile =sortPkgs(inputPKGs) ;
@@ -153,7 +185,6 @@ public class AnnottedClazsFrmPkgs {
 			);
 	SingletonRef.ONLYONEINS.getDispLogger().info("End Scaning And Collect Annoted Classes " ) ;
 	SingletonRef.ONLYONEINS.getDispLogger().info("Start Print Result") ;
-	//SingletonRef.ONLYONEINS.getDispLogger().info("\n"+ lisOfAnnotClzsAndMethds.printResult(lisOfAnnotClzsAndMethds.getLisOfCap())) ;
 	SingletonRef.ONLYONEINS.getDispLogger().info("\n"+ SingletonRef.ONLYONEINS.printResult(lisOfAnnotClzsAndMethds.getLisOfCap())) ;
 	SingletonRef.ONLYONEINS.getDispLogger().info("End Print Result") ;
 	
@@ -180,13 +211,11 @@ public class AnnottedClazsFrmPkgs {
 		 *  Most Properly we need to track the opened file before opening it??? 
          * Big Q here ????????????????????????????????????????
          * Also, the Jar inside jar needs more investigation and Testing 
+         * ******************** Fixed on 4thJan2020 ******************************************
 		 *******************************************************************************************************************************/
          
 		case "jar": 
-			//
-			// we need to check the open files for Mutiples jars?? Pending
-			//
-			FileSystem zipfs = FileSystems.newFileSystem(uri, env); //? Avoid some fun from Java regards opening the jar ? //
+			makeJarReady.accept(uri) ;				//// *Fixed on 4thJan2020*
 			rootPathToWalk = Paths.get(uri);
 			break; 
 		case "file": 
@@ -198,7 +227,7 @@ public class AnnottedClazsFrmPkgs {
 			throw new RuntimeException("uriToString Start with unkwon  match[" + startWithJarOrFile + "]");
 		} 
 		@SuppressWarnings("resource")
-		Stream<Path> allPaths = Files.walk(rootPathToWalk) ;
+		Stream<Path> allPaths = Files.walk(rootPathToWalk) ; //walk can be Parallel so the track set[synchtrackOpendJars]  is Synchronized 
 		allPaths
 		
 		.filter(isJavaClassFile)
@@ -265,7 +294,7 @@ public class AnnottedClazsFrmPkgs {
 				rpkgContent1.getStrFile().trim().length() - rpkgContent2.getStrFile().trim().length()).distinct()
 				.collect(Collectors.toList());
 		return sortedLisBylength ;
-	} 
+	}     
 	//
 	public void lisClassPath()
 	{

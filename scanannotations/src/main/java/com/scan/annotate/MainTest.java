@@ -6,10 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.annotations.samples.wrkspace.ClassAnnote1;
-import com.annotations.samples.wrkspace.MethodAnnotate1;
 import com.annotations.samples.wrkspace.ClassAnnoteX;
+import com.annotations.samples.wrkspace.MethodAnnotate1;
 import com.annotations.samples.wrkspace.RepeatAnnoationsMethods.OrderAnnotion;
-
 import com.common.SingletonRef;
 import com.scan.annotate.query.ClzAndAssociatedMethdsQR;
 
@@ -18,6 +17,7 @@ import com.scan.annotate.query.ClzAndAssociatedMethdsQR;
 - Captured Annotations for Classes and Jars 
 - Query the Scanned results to return specific annotations for Classes and Methods within the Classes
 - See MainTest to  how to Scan and Query the the Annotations
+Fixed reopen jar Files on 4thJan2020
 */ 
 
 public class MainTest {		
